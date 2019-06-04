@@ -1,0 +1,171 @@
+let User = require('../models').user;
+let authToken = require('../lib/token');
+let file =require('../lib/upload');
+
+searchOne = data => {
+  return User.findOne(data)
+    .catch(err => {
+      console.log("findOne err : " + err);
+    });
+};
+
+exports.getUserList = async (req, res, next) => {
+ var query = 'select a.id, a.name, (select permission from folder_list where folder_id=:id and user_id=a.id ) as isShared  from user a';
+    var values = {
+      id: req.query.folder_id
+    };
+    User.sequelize.query(query, {replacements: values})
+    .spread(function (results, metadata) {
+       
+        res.send({
+            result: "success",
+            data: results
+        });
+      }, function (err) {
+  
+  
+      });
+};
+
+
+// 회원가입
+// application/json
+// name, email, password, profile
+exports.register = async (req, res, next) => {
+
+  console.log('join');
+
+  const { name, email, password, profile } = req.body;
+
+  let result = await searchOne({
+    where: {
+      name: name,
+      email: email,
+    }
+  });
+
+  // auth_already_exists check
+  if (result) {
+    res.send({
+      result: "fail",
+      failType: "auth_already_exists"
+    });
+    return;
+  }
+
+
+  //before insert, upload image (base64img - > img file)
+  //for static image, not use function 
+  let imgPath = (profile.includes("static")) ? profile : await file.uploadAsbase64(profile)
+    .catch((err) => (console.log('[imgUplaod err] ' + err)));
+
+  //insert query
+  User.create({
+    name: name,
+    email: email,
+    password: password,
+    profile: imgPath,
+  })
+    .then(result => {
+      res.send({
+        result: "success"
+      });
+    })
+    .catch(err => {
+      console.log("[JOIN] create err : " + err);
+    });
+};
+
+// 로그인
+// application/json
+// email, password
+exports.login = async (req, res, next) => {
+  console.log("login");
+
+  let fail = null;
+
+  let result = await searchOne({
+    where: {
+      email: req.body.email,
+    }
+  });
+
+  // auth_not_exist check
+  if (!result) fail = "auth_not_exist";
+
+  // password_mismatch check
+  if (result && result.dataValues.password !== req.body.password)
+    fail = "password_mismatch";
+
+  if (fail !== null) {
+    res.send({
+      result: "fail",
+      failType: fail
+    });
+
+    return;
+  }
+
+  authToken.createToken({
+    _id: result.dataValues.id,
+    email: result.dataValues.email,
+    password : result.dataValues.password,
+  }).then((token) => {
+
+    if(req.body.autoLogin){
+      res.cookie('token', token,  {
+        expires : new Date(Date.now() + 24 * 60 * 60 * 1000),
+        httpOnly : true,
+      });
+    }
+
+    res.send({
+      result: "success",
+      token: token,
+      data: {
+        id: result.dataValues.id,
+        name: result.dataValues.name,
+        profile: result.dataValues.profile
+      }
+    });
+
+  }).catch((err) => {
+    console.log('createToken error : ' + err);
+  });
+};
+
+exports.autoLogin = async (req, res, next) => {
+  if(req.cookies.token) {
+    console.log("autoLogin token : ",req.cookies.token);
+
+    authToken.decodeToken(req.cookies.token)
+    .then((data) =>{
+      res.send({
+        result : "success",
+        data: {
+          autoLogin : true,
+          email : data.email,
+          password: data.password
+        }
+      })
+      res.status(200).redirect('/note');
+    })
+    .catch((err)=>{
+      console.log("autoLogin error : "+ err);
+    })
+  }
+  else {
+    res.send({
+      result: "success",
+      data: {
+        autoLogin : false,
+      }
+    })
+  }
+}
+
+exports.logout = async (req, res, next) => {
+  res.clearCookie('token');
+  console.log("cookie 삭제 : ",req.cookies.token);
+  return res.status(200).redirect('/');
+}
