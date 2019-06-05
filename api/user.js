@@ -1,5 +1,6 @@
 let User = require("../models").user;
 let Folder_List = require("../models").folder_list;
+let Folder = require("../models").folder;
 let Note = require("../models").note;
 let authToken = require("../lib/token");
 let file = require("../lib/upload");
@@ -13,21 +14,20 @@ searchOne = data => {
 };
 
 exports.getUserList = async (req, res, next) => {
- var query = 'select a.id, a.name, (select permission from folder_list where folder_id=:id and user_id=a.id ) as isShared  from user a';
-    var values = {
-      id: req.query.folder_id
-    };
-    User.sequelize.query(query, {replacements: values})
-    .spread(function (results, metadata) {
-       
-        res.send({
-            result: "success",
-            data: results
-        });
-      }, function (err) {
-  
-  
+  var query =
+    "select a.id, a.name, (select permission from folder_list where folder_id=:id and user_id=a.id ) as isShared  from user a";
+  var values = {
+    id: req.query.folder_id
+  };
+  User.sequelize.query(query, { replacements: values }).spread(
+    function(results, metadata) {
+      res.send({
+        result: "success",
+        data: results
       });
+    },
+    function(err) {}
+  );
 };
 
 
@@ -187,7 +187,7 @@ exports.getAllUserList = async (req, res, next) => {
       data: result
     })
   }).catch(err => {
-    console.log("[ERROR] getAllUserList : " + err);
+    console.error("[getAllUserList] : " + err);
   });
 }
 
@@ -201,6 +201,22 @@ exports.deleteUser = async (req, res, next) => {
       data: result
     });
   }).catch(err => {
-    console.log("[ERROR] deleteUser: ", err);
+    console.error("[deleteUser]: ", err);
   });
+};
+
+// Get a list of all folder in admin page
+exports.getAllFolderList = async (req, res, next) => {
+  var query =
+    "SELECT c.id, a.profile, a.name AS u_name, c.name AS f_name, b.permission FROM User a, Folder_List b, Folder c WHERE a.id = b.user_id AND b.folder_id = c.id";
+  User.sequelize.query(query).spread(
+    function(results, metadata) {
+      res.send({
+        result: "success",
+        data: results
+      });
+    },
+    function(err) {
+      console.error("[getAllFolderList]: ", err);
+    });
 };

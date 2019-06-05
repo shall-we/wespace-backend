@@ -14,8 +14,6 @@ router.post("/login", UserAPI.login);
 router.get("/user", UserAPI.getUserList);
 router.get("/autoLogin", UserAPI.autoLogin);
 router.get("/logout", UserAPI.logout);
-router.get("/admin/user", UserAPI.getAllUserList);
-router.delete("/admin/user/:id", UserAPI.deleteUser);
 
 // Folder
 router.post("/folder", FolderAPI.register);
@@ -49,5 +47,9 @@ router.post("/admin/announcement", AnnouncementAPI.register);
 router.get("/admin/announcement/:id", AnnouncementAPI.getAnnouncement);
 router.patch("/admin/announcement/:id", AnnouncementAPI.updateAnnouncement);
 router.delete("/admin/announcement/:id", AnnouncementAPI.deleteAnnouncement);
+
+router.get("/admin/user", UserAPI.getAllUserList);
+router.delete("/admin/user/:id", UserAPI.deleteUser);
+router.get("/admin/folder", UserAPI.getAllFolderList);
 
 module.exports = router;
