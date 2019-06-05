@@ -1,6 +1,9 @@
-let User = require('../models').user;
-let authToken = require('../lib/token');
-let file =require('../lib/upload');
+let User = require("../models").user;
+let Folder_List = require("../models").folder_list;
+let Note = require("../models").note;
+let authToken = require("../lib/token");
+let file = require("../lib/upload");
+const Sequelize = require("sequelize");
 
 searchOne = data => {
   return User.findOne(data)
@@ -169,3 +172,35 @@ exports.logout = async (req, res, next) => {
   console.log("cookie 삭제 : ",req.cookies.token);
   return res.status(200).redirect('/');
 }
+
+// Get a list of all user in admin page
+exports.getAllUserList = async (req, res, next) => {
+  User.findAll({
+    attributes: {
+      include: [ "User.id", [Sequelize.fn('COUNT', Sequelize.col('User.id')), 'folder_count'] ]
+    },
+    include: [{ model: Folder_List, }],
+    group: [ 'User.id' ],
+  }).then(result => {
+    res.send({
+      result: "success",
+      data: result
+    })
+  }).catch(err => {
+    console.log("[ERROR] getAllUserList : " + err);
+  });
+}
+
+// Delete user when administrator clicked a row
+exports.deleteUser = async (req, res, next) => {
+  User.destroy({
+    where: { id: req.params.id }
+  }).then(result => {
+    res.send({
+      result: "success",
+      data: result
+    });
+  }).catch(err => {
+    console.log("[ERROR] deleteUser: ", err);
+  });
+};
