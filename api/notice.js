@@ -39,18 +39,22 @@ var values = {
   
       });
 };
-//date_format(a.reg_date,"%y-%m-%d %T")
+
         exports.getNoticeList = async (req, res, next) => {
 
             if(req.query.type==='FOLDER')
             query='select c.name as "from",d.name as "object", a.message, date_format(a.reg_date,"%y-%m-%d %T")as reg_date from NOTICE a,USER c,FOLDER d where  a.from=c.id and a.object=d.id and  a.to=:id and a.type=:type order by a.reg_date';
             else if(req.query.type==='COMMENT')
-            query='select a.from as from_id,b.name as "from" , c.name as object , a.message, date_format(a.reg_date,"%T") as reg_date ,  COUNT(IF (a.check ="FALSE", 1, null)) as "check" from NOTICE a,USER b ,NOTE c where  a.from=b.id and a.object=c.id and  a.object=:id and a.type=:type  group by a.from, b.name , c.name , a.message, a.reg_date order by a.reg_date';
+            query='select a.from as from_id,b.name as "from" , c.name as object , a.message, date_format(a.reg_date,"%T") as reg_date ,  COUNT(IF (a.check ="FALSE", 1, null)) as "check" ,a.type from NOTICE a,USER b ,NOTE c where  a.from=b.id and a.object=c.id and  a.object=:id and (a.type=:type or (a.type="CHAT" and a.to=:user_id))  group by a.from, b.name , c.name , a.message, a.reg_date,a.type order by a.reg_date';
             else  if(req.query.type==='NOTE')
             query='select d.name as "object",c.name as "from", a.message, date_format(a.reg_date,"%y-%m-%d %T") as reg_date  from NOTICE a ,USER c,NOTE d where a.from=c.id and a.object=d.id and a.check="FALSE" and  a.to=:id and a.type=:type order by a.reg_date';
+            else  if(req.query.type==='CHAT')
+            query='select d.name as "object",c.name as "from", a.message, date_format(a.reg_date,"%y-%m-%d %T") as reg_date  from NOTICE a ,USER c,NOTE d where a.from=c.id and a.object=d.id and a.check="FALSE" and  a.to=:id and a.type=:type order by a.reg_date desc';
+
             var values = {
               id: parseInt(req.query.id),
               type: req.query.type,
+              user_id:parseInt(req.query.user_id),
             };
             Notice.sequelize.query(query, {replacements: values})
             .spread(function (results, metadata) {

@@ -10,7 +10,7 @@ searchOne = data => {
 };
 
 exports.getUserList = async (req, res, next) => {
- var query = 'select a.id, a.name, (select permission from folder_list where folder_id=:id and user_id=a.id ) as isShared  from user a';
+ var query = 'select a.id, a.name,a.email, a.profile, (select permission from folder_list where folder_id=:id and user_id=a.id ) as isShared  from user a';
     var values = {
       id: req.query.folder_id
     };
