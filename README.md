@@ -12,4 +12,19 @@ npm install socket.io-client
 npm install socket.io
 npm install cors
 sharedb-mongo
+
+# + June 5, 2019
+npm i date-utils
 ```
+
+
+
+## Usage
+
+```shell
+npm install
+npm start
+# if you wanna run automatically
+npm run start:dev
+```
+
