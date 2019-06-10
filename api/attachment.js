@@ -7,7 +7,7 @@ const mime = require('mime-types');
 // note_id, filelist
 module.exports.create = async(req, res, next)=>{
     console.log('create');
- let list = await upload.uploadAsFile(req)
+ let list = await upload.uploadAsFile(req, 'uploads')
                 .catch(err=>(console.log('[uploadAsFile]'+err)));
 
     console.log(list);

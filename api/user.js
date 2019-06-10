@@ -1,6 +1,6 @@
 let User = require('../models').user;
 let authToken = require('../lib/token');
-let file =require('../lib/upload');
+let upload =require('../lib/upload');
 
 searchOne = data => {
   return User.findOne(data)
@@ -10,7 +10,7 @@ searchOne = data => {
 };
 
 exports.getUserList = async (req, res, next) => {
- var query = 'select a.id, a.name,a.email, a.profile, (select permission from folder_list where folder_id=:id and user_id=a.id ) as isShared  from user a';
+ var query = 'select a.id, a.name, (select permission from folder_list where folder_id=:id and user_id=a.id ) as isShared  from user a';
     var values = {
       id: req.query.folder_id
     };
@@ -35,12 +35,12 @@ exports.register = async (req, res, next) => {
 
   console.log('join');
 
-  const { name, email, password, profile } = req.body;
+  let userData = await upload.uploadAsFile(req , 'user');
 
   let result = await searchOne({
     where: {
-      name: name,
-      email: email,
+      name: userData.name,
+      email: userData.email,
     }
   });
 
@@ -53,19 +53,8 @@ exports.register = async (req, res, next) => {
     return;
   }
 
-
-  //before insert, upload image (base64img - > img file)
-  //for static image, not use function 
-  let imgPath = (profile.includes("static")) ? profile : await file.uploadAsbase64(profile)
-    .catch((err) => (console.log('[imgUplaod err] ' + err)));
-
   //insert query
-  User.create({
-    name: name,
-    email: email,
-    password: password,
-    profile: imgPath,
-  })
+  User.create(userData)
     .then(result => {
       res.send({
         result: "success"
@@ -106,6 +95,11 @@ exports.login = async (req, res, next) => {
     return;
   }
 
+  let profile = await upload.getbase64Img(result.dataValues.profile)
+  .catch(err=>{console.log('[GETBASE64IMG] '+err)});
+
+  // console.log(profile);
+
   authToken.createToken({
     _id: result.dataValues.id,
     email: result.dataValues.email,
@@ -117,6 +111,7 @@ exports.login = async (req, res, next) => {
         expires : new Date(Date.now() + 24 * 60 * 60 * 1000),
         httpOnly : true,
       });
+      // res.set('x-access-token' , token);
     }
 
     res.send({
@@ -125,7 +120,7 @@ exports.login = async (req, res, next) => {
       data: {
         id: result.dataValues.id,
         name: result.dataValues.name,
-        profile: result.dataValues.profile
+        profile: profile,
       }
     });
 
@@ -148,21 +143,13 @@ exports.autoLogin = async (req, res, next) => {
           password: data.password
         }
       })
-      res.status(200).redirect('/note');
     })
     .catch((err)=>{
       console.log("autoLogin error : "+ err);
     })
   }
-  else {
-    res.send({
-      result: "success",
-      data: {
-        autoLogin : false,
-      }
-    })
-  }
 }
+
 
 exports.logout = async (req, res, next) => {
   res.clearCookie('token');

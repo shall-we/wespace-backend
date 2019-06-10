@@ -8,6 +8,8 @@ const Common = require('./common');
 
 let router = require("express").Router();
 
+router.all("/*", Common.checkToken);
+
 // user
 router.post("/join", UserAPI.register);
 router.post("/login", UserAPI.login);
