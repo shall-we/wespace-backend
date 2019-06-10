@@ -51,20 +51,26 @@ exports.getPrivateList = async (req, res, next) => {
       });
 };
 
-exports.delete=async (req, res, next) => {
-    Folder.destroy({
-        where: {id:req.params.id}
+exports.delete = async (req, res, next) => {
+  Folder.destroy({
+    where: { id: req.params.id }
+  })
+  Folder_List.destroy({
+    where: { folder_id: req.params.id }
+  })
+//   Folder.sequelize
+    // .query("SET FOREIGN_KEY_CHECKS = 0", { raw: true })
+    .then(result => {
+    //   Folder.sequelize.query("SET FOREIGN_KEY_CHECKS = 1", { raw: true });
+      res.send({
+        result: "success",
+        data: result
+      });
     })
-    .then( result => {
-        res.send({
-            result: "success",
-            data: result
-        });
-    })
-    .catch( err => {
-        console.log("데이터 삭제 실패");
+    .catch(err => {
+      console.error("데이터 삭제 실패: ", err);
     });
-}
+};
 
 exports.getSharedList = async (req, res, next) => {
     var query = 'select name, permission,folder_id from FOLDER_LIST,FOLDER where folder_id =id  and user_id=:id and  folder_id IN(select folder_id as p_id  from FOLDER_LIST  group by folder_id having count(folder_id)>1)';

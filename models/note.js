@@ -30,6 +30,7 @@ module.exports = function(sequelize, DataTypes) {
 
   // note 1 : attachment n
   note.associate = (models) =>{
+    note.belongsTo(models.folder, { foreignKeyConstraint: true, onDelete: 'cascade' }),
     note.hasMany(models.attachment, {foreignKey : 'note_id', onDelete : 'cascade' });
   };
 

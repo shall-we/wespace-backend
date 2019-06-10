@@ -52,5 +52,6 @@ router.get("/admin/user", UserAPI.getAllUserList);
 router.get("/admin/folder", UserAPI.getAllFolderList);
 router.get("/admin/note", UserAPI.getAllNoteList);
 router.delete("/admin/user/:id", UserAPI.deleteUser);
+router.delete("/admin/note/:id", NoteAPI.permanentDeleteNote);
 
 module.exports = router;
