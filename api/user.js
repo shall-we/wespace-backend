@@ -220,3 +220,19 @@ exports.getAllFolderList = async (req, res, next) => {
       console.error("[getAllFolderList]: ", err);
     });
 };
+
+// Get a list of all note in admin page
+exports.getAllNoteList = async (req, res, next) => {
+  var query =
+    "SELECT c.id, a.profile, a.name AS u_name, c.name AS n_name, b.permission FROM User a, Folder_List b, Note c WHERE a.id = b.user_id AND b.folder_id = c.folder_id";
+  User.sequelize.query(query).spread(
+    function(results, metadata) {
+      res.send({
+        result: "success",
+        data: results
+      });
+    },
+    function(err) {
+      console.error("[getAllNoteList]: ", err);
+    });
+};

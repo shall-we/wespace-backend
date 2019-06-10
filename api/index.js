@@ -49,7 +49,8 @@ router.patch("/admin/announcement/:id", AnnouncementAPI.updateAnnouncement);
 router.delete("/admin/announcement/:id", AnnouncementAPI.deleteAnnouncement);
 
 router.get("/admin/user", UserAPI.getAllUserList);
-router.delete("/admin/user/:id", UserAPI.deleteUser);
 router.get("/admin/folder", UserAPI.getAllFolderList);
+router.get("/admin/note", UserAPI.getAllNoteList);
+router.delete("/admin/user/:id", UserAPI.deleteUser);
 
 module.exports = router;
