@@ -8,6 +8,16 @@ let Folder_List = require("../models").folder_list;
 exports.register = async (req, res, next) => {
     console.log("create");
 
+    //if has token, check valid token
+    if(req.user){
+        if(req.user._id !== req.body.user_id){
+            console.log(req.user._id);
+            console.log(req.body.user_id);
+            res.send({result : "fail", failType : "notValidateToken"});
+            return;
+        }
+    }
+
     //insert query
     const id = await Folder.create({
         name: req.body.name
@@ -35,6 +45,15 @@ exports.register = async (req, res, next) => {
 };
 
 exports.getPrivateList = async (req, res, next) => {
+
+    //if has token, check valid token
+    if(req.user){
+        if(req.user._id !== parseInt(req.query.user_id)){
+            res.send({result : "fail", failType : "notValidateToken"});
+            return;
+        }
+    }
+
     var query = 'select b.name, a.permission,a.folder_id, (select count(*) from note , status where a.folder_id=note.folder_id and note.id = status.id and status.status <> "DELETED") as count from FOLDER_LIST a,FOLDER b where a.folder_id =b.id and a.folder_id IN(select folder_id as p_id from FOLDER_LIST group by folder_id having count(folder_id)< 2) and user_id=:id';
     var values = {
       id: req.query.user_id
@@ -73,6 +92,15 @@ exports.delete = async (req, res, next) => {
 };
 
 exports.getSharedList = async (req, res, next) => {
+
+    //if has token, check valid token
+    if(req.user){
+        if(req.user._id !== parseInt(req.query.user_id)){
+            res.send({result : "fail", failType : "notValidateToken"});
+            return;
+        }
+    }
+    
     var query = 'select name, permission,folder_id from FOLDER_LIST,FOLDER where folder_id =id  and user_id=:id and  folder_id IN(select folder_id as p_id  from FOLDER_LIST  group by folder_id having count(folder_id)>1)';
     var values = {
       id: req.query.user_id

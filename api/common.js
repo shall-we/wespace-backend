@@ -5,23 +5,20 @@ exports.checkToken= async(req,res,next)=>{
 
     const {token} = req.cookies;
 
-    if(!token){
-        if(req.url!=="/login"&&req.url!=="/join"){
-        console.log('this error');
-        res.send("It's not have token!!!");
-        }else{
-            next();
-        }
+     if(!token){
+    //     token = req.headers['x-access-token'] || req.headers['authorization']; // Express headers are auto converted to lowercase
+    //       if (token.startsWith('Bearer ')) {
+    //       // Remove Bearer from string
+    //       token = token.slice(7, token.length);
+    //     }
+        next();
     }else{
 
-    authToken.decodeToken(token)
-    .then(decodedToken => {
-        req.user=decodedToken;
-        next();
-    })
-    .catch(err=>{
+    let decodedToken = await authToken.decodeToken(token).catch(err=>{
         console.log(err);
-        res.send("It's error for decodeToken");
+        res.send({result : 'fail', failType : "It's error for decodeToken"});
     });
+    req.user=decodedToken;
+    next();
 }
 }
