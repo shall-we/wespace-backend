@@ -1,6 +1,10 @@
-let User = require('../models').user;
-let authToken = require('../lib/token');
-let file =require('../lib/upload');
+let User = require("../models").user;
+let Folder_List = require("../models").folder_list;
+let Folder = require("../models").folder;
+let Note = require("../models").note;
+let authToken = require("../lib/token");
+let upload = require('../lib/upload');
+const Sequelize = require("sequelize");
 
 searchOne = data => {
   return User.findOne(data)
@@ -10,21 +14,20 @@ searchOne = data => {
 };
 
 exports.getUserList = async (req, res, next) => {
- var query = 'select a.id, a.name,a.email, a.profile, (select permission from folder_list where folder_id=:id and user_id=a.id ) as isShared  from user a';
-    var values = {
-      id: req.query.folder_id
-    };
-    User.sequelize.query(query, {replacements: values})
-    .spread(function (results, metadata) {
-       
-        res.send({
-            result: "success",
-            data: results
-        });
-      }, function (err) {
-  
-  
+  var query =
+    "select a.id, a.name,a.email, a.profile, (select permission from folder_list where folder_id=:id and user_id=a.id ) as isShared  from user a";
+  var values = {
+    id: req.query.folder_id
+  };
+  User.sequelize.query(query, { replacements: values }).spread(
+    function(results, metadata) {
+      res.send({
+        result: "success",
+        data: results
       });
+    },
+    function(err) {}
+  );
 };
 
 
@@ -35,12 +38,12 @@ exports.register = async (req, res, next) => {
 
   console.log('join');
 
-  const { name, email, password, profile } = req.body;
+  let userData = await upload.uploadAsFile(req , 'user');
 
   let result = await searchOne({
     where: {
-      name: name,
-      email: email,
+      name: userData.name,
+      email: userData.email,
     }
   });
 
@@ -53,19 +56,8 @@ exports.register = async (req, res, next) => {
     return;
   }
 
-
-  //before insert, upload image (base64img - > img file)
-  //for static image, not use function 
-  let imgPath = (profile.includes("static")) ? profile : await file.uploadAsbase64(profile)
-    .catch((err) => (console.log('[imgUplaod err] ' + err)));
-
   //insert query
-  User.create({
-    name: name,
-    email: email,
-    password: password,
-    profile: imgPath,
-  })
+  User.create(userData)
     .then(result => {
       res.send({
         result: "success"
@@ -106,6 +98,11 @@ exports.login = async (req, res, next) => {
     return;
   }
 
+  let profile = await upload.getbase64Img(result.dataValues.profile)
+  .catch(err=>{console.log('[GETBASE64IMG] '+err)});
+
+  // console.log(profile);
+
   authToken.createToken({
     _id: result.dataValues.id,
     email: result.dataValues.email,
@@ -117,6 +114,7 @@ exports.login = async (req, res, next) => {
         expires : new Date(Date.now() + 24 * 60 * 60 * 1000),
         httpOnly : true,
       });
+      // res.set('x-access-token' , token);
     }
 
     res.send({
@@ -125,7 +123,7 @@ exports.login = async (req, res, next) => {
       data: {
         id: result.dataValues.id,
         name: result.dataValues.name,
-        profile: result.dataValues.profile
+        profile: profile,
       }
     });
 
@@ -148,24 +146,80 @@ exports.autoLogin = async (req, res, next) => {
           password: data.password
         }
       })
-      res.status(200).redirect('/note');
     })
     .catch((err)=>{
       console.log("autoLogin error : "+ err);
     })
   }
-  else {
-    res.send({
-      result: "success",
-      data: {
-        autoLogin : false,
-      }
-    })
-  }
 }
+
 
 exports.logout = async (req, res, next) => {
   res.clearCookie('token');
   console.log("cookie 삭제 : ",req.cookies.token);
   return res.status(200).redirect('/');
 }
+
+// Get a list of all user in admin page
+exports.getAllUserList = async (req, res, next) => {
+  User.findAll({
+    attributes: {
+      include: [ "User.id", [Sequelize.fn('COUNT', Sequelize.col('User.id')), 'folder_count'] ]
+    },
+    include: [{ model: Folder_List, }],
+    group: [ 'User.id' ],
+  }).then(result => {
+    res.send({
+      result: "success",
+      data: result
+    })
+  }).catch(err => {
+    console.error("[getAllUserList] : " + err);
+  });
+}
+
+// Delete user when administrator clicked a row
+exports.deleteUser = async (req, res, next) => {
+  User.destroy({
+    where: { id: req.params.id }
+  }).then(result => {
+    res.send({
+      result: "success",
+      data: result
+    });
+  }).catch(err => {
+    console.error("[deleteUser]: ", err);
+  });
+};
+
+// Get a list of all folder in admin page
+exports.getAllFolderList = async (req, res, next) => {
+  var query =
+    "SELECT c.id, a.profile, a.name AS u_name, c.name AS f_name, b.permission FROM User a, Folder_List b, Folder c WHERE a.id = b.user_id AND b.folder_id = c.id";
+  User.sequelize.query(query).spread(
+    function(results, metadata) {
+      res.send({
+        result: "success",
+        data: results
+      });
+    },
+    function(err) {
+      console.error("[getAllFolderList]: ", err);
+    });
+};
+
+// Get a list of all note in admin page
+exports.getAllNoteList = async (req, res, next) => {
+  var query =
+    "SELECT c.id, a.profile, a.name AS u_name, c.name AS n_name, b.permission FROM User a, Folder_List b, Note c WHERE a.id = b.user_id AND b.folder_id = c.folder_id";
+  User.sequelize.query(query).spread(
+    function(results, metadata) {
+      res.send({
+        result: "success",
+        data: results
+      });
+    },
+    function(err) {
+      console.error("[getAllNoteList]: ", err);
+    });
+};

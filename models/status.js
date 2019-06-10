@@ -25,7 +25,7 @@ module.exports = function(sequelize, DataTypes) {
  
    //note 1 -> status 1
    status.associate=(models)=>{
-     status.belongsTo(models.note, {foreignKey : "id"})
+    status.belongsTo(models.note, { foreignKeyConstraint : true, onDelete: "set null" })
    }
 
    return status;

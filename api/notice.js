@@ -2,6 +2,13 @@ const Notice = require("../models").notice;
 const Sequelize = require('sequelize');
 exports.create = async (req, res, next) => {
 
+  //if has token, check valid token
+  if(req.user){
+    if(req.user._id !== req.body.from){
+        res.send({result : "fail", failType : "notValidateToken"});
+        return;
+    }
+}
 const query_tmp = 'INSERT INTO NOTICE  SELECT null, :type, :from, a.user_id, :object,:message, now(),"FALSE" FROM folder_list a WHERE folder_id=';
 const query_folder=':object';
 const query_note='(select folder_id from note where id=:object)';
@@ -70,6 +77,14 @@ var values = {
         };
 
         exports.updateNoticeList = async (req, res, next) => {
+
+          //if has token, check valid token
+          if(req.user){
+            if(req.user._id !== parseInt(req.params.to)){
+                res.send({result : "fail", failType : "notValidateToken"});
+                return;
+              }
+          }
           Notice.update({check:'TRUE'},{where: {to: req.params.to,object:req.params.object,type:req.params.type}, returning: true})
               .then(function(result) {res.json(result[1][0]);})
               .catch(function(err) {console.log("데이터 수정 실패");});

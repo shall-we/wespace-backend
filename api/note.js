@@ -83,3 +83,20 @@ exports.setStatus=async (req, res, next) => {
     });
 }
 
+exports.permanentDeleteNote = async (req, res, next) => {
+  Note.destroy({
+    where: { id: req.params.id }
+  })
+//   Note.sequelize
+    // .query("SET FOREIGN_KEY_CHECKS = 0", { raw: true })
+    .then(result => {
+    //   Note.sequelize.query("SET FOREIGN_KEY_CHECKS = 1", { raw: true });
+      res.send({
+        result: "success",
+        data: result
+      });
+    })
+    .catch(err => {
+      console.error("[Note - delete]: ", err);
+    });
+};
