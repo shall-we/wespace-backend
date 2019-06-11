@@ -5,6 +5,7 @@ let Note = require("../models").note;
 let authToken = require("../lib/token");
 let upload = require('../lib/upload');
 const Sequelize = require("sequelize");
+require('dotenv').config();
 
 searchOne = data => {
   return User.findOne(data)
@@ -74,11 +75,13 @@ exports.register = async (req, res, next) => {
 exports.login = async (req, res, next) => {
   console.log("login");
 
+  const {email, password} = req.body;
+
   let fail = null;
 
   let result = await searchOne({
     where: {
-      email: req.body.email,
+      email: email,
     }
   });
 
@@ -86,7 +89,7 @@ exports.login = async (req, res, next) => {
   if (!result) fail = "auth_not_exist";
 
   // password_mismatch check
-  if (result && result.dataValues.password !== req.body.password)
+  if (result && result.dataValues.password !== password)
     fail = "password_mismatch";
 
   if (fail !== null) {
@@ -98,15 +101,21 @@ exports.login = async (req, res, next) => {
     return;
   }
 
-  let profile = await upload.getbase64Img(result.dataValues.profile)
-  .catch(err=>{console.log('[GETBASE64IMG] '+err)});
+  let profile = (result.dataValues.profile!=="defaultProfile")?await upload.getbase64Img(result.dataValues.profile)
+  .catch(err=>{console.log('[GETBASE64IMG] '+err)}):result.dataValues.profile;
 
-  // console.log(profile);
+  let Authorization=false;
+
+  if(process.env.ADMINEMAIL===email && process.env.ADMINPASSWORD ===password){
+    console.log('ADMIN');
+      Authorization=true;
+  }
 
   authToken.createToken({
     _id: result.dataValues.id,
     email: result.dataValues.email,
     password : result.dataValues.password,
+    authorizated : Authorization,
   }).then((token) => {
 
     if(req.body.autoLogin){
@@ -119,11 +128,12 @@ exports.login = async (req, res, next) => {
 
     res.send({
       result: "success",
-      token: token,
+      //token: token,
       data: {
         id: result.dataValues.id,
         name: result.dataValues.name,
         profile: profile,
+        authorizated : Authorization,
       }
     });
 
@@ -133,23 +143,19 @@ exports.login = async (req, res, next) => {
 };
 
 exports.autoLogin = async (req, res, next) => {
-  if(req.cookies.token) {
-    console.log("autoLogin token : ",req.cookies.token);
 
-    authToken.decodeToken(req.cookies.token)
-    .then((data) =>{
-      res.send({
-        result : "success",
-        data: {
-          autoLogin : true,
-          email : data.email,
-          password: data.password
-        }
-      })
-    })
-    .catch((err)=>{
-      console.log("autoLogin error : "+ err);
-    })
+  if(req.user){
+    console.log("autoLogin token : ",req.user);
+
+    res.send({
+      result : "success",
+      data: {
+        autoLogin : true,
+        email : req.user.email,
+        password: req.user.password,
+        authorizated : req.user.authorizated,
+      }
+    });
   }
 }
 
