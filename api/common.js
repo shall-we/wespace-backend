@@ -31,6 +31,8 @@ exports.checkAdmin=async(req,res,next)=>{
     console.log(req.user);
     const adminPassword = 'admin1234';
 
+    if(!req.user) next();
+
    if(req.user.authorizated){
             console.log('this is admin');
             next();
