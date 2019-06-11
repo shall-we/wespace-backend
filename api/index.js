@@ -43,6 +43,7 @@ router.delete("/attachment/:id", AttachmentAPI.delete);
 router.get("/attachment/list", AttachmentAPI.getAttachmentList);
 router.post("/attachment/download", AttachmentAPI.downloadAttachment);
 
+router.all("/admin/*", Common.checkAdmin);
 // Announcement
 router.get("/admin/announcement", AnnouncementAPI.getAnnouncementList);
 router.post("/admin/announcement", AnnouncementAPI.register);
