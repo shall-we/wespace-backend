@@ -28,9 +28,12 @@ router.patch("/folder/:id/:name", FolderAPI.updateFolderName);
 
 // Note
 router.get("/note/list", NoteAPI.getNoteList);
+router.get("/note/searchlist",NoteAPI.getSearchNoteList);
 router.post("/note", NoteAPI.register);
 router.patch("/note/:id/:name", NoteAPI.updateNoteName);
 router.patch("/note/status/:id/:status", NoteAPI.setStatus);
+router.patch("/note/lock/:id/:lock", NoteAPI.setLock);
+router.get("/note/lock/", NoteAPI.getLock);
 
 // Notice
 router.post("/notice", NoticeAPI.create);
