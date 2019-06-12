@@ -5,6 +5,8 @@ const NoticeAPI = require("./notice");
 const AttachmentAPI = require("./attachment");
 const AnnouncementAPI = require("./announcement");
 const Common = require("./common");
+const FriendAPI = require("./friend");
+const ChatAPI = require("./chat");
 
 let router = require("express").Router();
 
@@ -14,6 +16,7 @@ router.all("/*", Common.checkToken);
 router.post("/join", UserAPI.register);
 router.post("/login", UserAPI.login);
 router.get("/user", UserAPI.getUserList);
+router.get("/userExceptFriend", UserAPI.getUserListExceptMyFriend);
 router.get("/autoLogin", UserAPI.autoLogin);
 router.get("/logout", UserAPI.logout);
 
@@ -51,10 +54,32 @@ router.get("/admin/announcement/:id", AnnouncementAPI.getAnnouncement);
 router.patch("/admin/announcement/:id", AnnouncementAPI.updateAnnouncement);
 router.delete("/admin/announcement/:id", AnnouncementAPI.deleteAnnouncement);
 
+
+//friend List
+router.post("/friend/add", FriendAPI.insertFriend);
+router.delete("/friend/delete", FriendAPI.deleteFriend);
+router.get("/friend/getAllFriend", FriendAPI.searchAllFriendWithInfoAPI);
+
+
+//getPrivateChatList
+router.get("/chat/getSingleChat", ChatAPI.getSingleChat);
+router.get("/chat/getChats", ChatAPI.getChats);
+router.post("/chat/initChatroom", ChatAPI.initChatRoom);
+router.patch("/chat/updateChatRoomTitle", ChatAPI.updateChatRoomTitle);
+
+router.get("/chat/getChatParticipantsInfo", ChatAPI.getChatParticipantInfo);
+router.get("/chat/getPrivateChatroomList", ChatAPI.getPrivateChatroomList);
+router.get("/chat/countChatroom", ChatAPI.countChatroom);
+
+router.delete("/chat/dropChatroom", ChatAPI.dropChatRoom);
+
 router.get("/admin/user", UserAPI.getAllUserList);
 router.get("/admin/folder", UserAPI.getAllFolderList);
 router.get("/admin/note", UserAPI.getAllNoteList);
 router.delete("/admin/user/:id", UserAPI.deleteUser);
 router.delete("/admin/note/:id", NoteAPI.permanentDeleteNote);
+
+
+
 
 module.exports = router;

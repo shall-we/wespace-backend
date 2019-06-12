@@ -7,11 +7,17 @@ let upload = require('../lib/upload');
 const Sequelize = require("sequelize");
 require('dotenv').config();
 
-searchOne = data => {
+exports.searchOne = data => {
   return User.findOne(data)
     .catch(err => {
       console.log("findOne err : " + err);
     });
+};
+
+exports.searchAll = data => {
+  return User.findAll(data).catch(err => {
+    console.log("findAll err : " + err);
+  });
 };
 
 exports.getUserList = async (req, res, next) => {
@@ -27,9 +33,28 @@ exports.getUserList = async (req, res, next) => {
         data: results
       });
     },
-    function(err) {}
+    function(err) {console.log("user 목록 가지고 오던 중에 오류 발생.. ", err);}
   );
 };
+
+exports.getUserListExceptMyFriend = async (req, res) => {
+
+  let query = 'select user.id, user.name, user.email, user.profile from user where user.id !=:id and user.id not in (select friend_id from friend_list where user_id =:id)';
+  let values = {
+    id: req.query.user_id
+  };
+  User.sequelize.query(query, {replacements: values})
+      .spread(function (results, metadata) {
+
+        res.send({
+          result: "success",
+          data: results
+        });
+      }, function (err) {
+        console.log("친구 제외한 유저 목록 가져오는 중에 오류 발생.. ", err);
+      });
+};
+
 
 
 // 회원가입
@@ -41,7 +66,7 @@ exports.register = async (req, res, next) => {
 
   let userData = await upload.uploadAsFile(req , 'user');
 
-  let result = await searchOne({
+  let result = await exports.searchOne({
     where: {
       name: userData.name,
       email: userData.email,
@@ -79,7 +104,7 @@ exports.login = async (req, res, next) => {
 
   let fail = null;
 
-  let result = await searchOne({
+  let result = await exports.searchOne({
     where: {
       email: email,
     }
@@ -101,8 +126,8 @@ exports.login = async (req, res, next) => {
     return;
   }
 
-  let profile = (result.dataValues.profile!=="defaultProfile")?await upload.getbase64Img(result.dataValues.profile)
-  .catch(err=>{console.log('[GETBASE64IMG] '+err)}):result.dataValues.profile;
+  let profile = (result.dataValues.profile.split(',')[0].match(/^data:image\/(png|jpg);base64/))?await upload.getbase64Img(result.dataValues.profile)
+      .catch(err=>{console.log('[GETBASE64IMG] '+err)}):result.dataValues.profile;
 
   let Authorization=false;
 
@@ -229,3 +254,6 @@ exports.getAllNoteList = async (req, res, next) => {
       console.error("[getAllNoteList]: ", err);
     });
 };
+
+
+
