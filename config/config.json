@@ -3,7 +3,7 @@
     "username": "wespace",
     "password": "wespace",
     "database": "wespace",
-    "host": "127.0.0.1",
+    "host": "15.164.154.155",
     "dialect": "mysql",
    "define": {
         "timestamps": false,

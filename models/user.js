@@ -14,7 +14,8 @@ module.exports = function(sequelize, DataTypes) {
     },
     email: {
       type: DataTypes.STRING(30),
-      allowNull: false
+      allowNull: false,
+      unique: true,
     },
     password: {
       type: DataTypes.STRING(128),
@@ -30,7 +31,12 @@ module.exports = function(sequelize, DataTypes) {
 
   //user 1 : folder_list n
   user.associate=(models) =>{
-    user.hasMany(models.folder_list, {foreignKey : 'user_id'});
+        user.hasMany(models.folder_list, {foreignKey : 'user_id'}),
+        user.hasMany(models.chatroom_list, {foreignKey : 'user_id'}),
+        user.hasMany(models.chatroom_info, {foreignKey : 'user_id'}),
+        user.hasMany(models.friend_list, {foreignKey : 'user_id', onDelete : 'cascade' }),
+        user.hasMany(models.friend_list, {foreignKey : 'friend_id', onDelete : 'cascade' }),
+        user.hasMany(models.group_list, {foreignKey : 'user_id', onDelete : 'cascade' })
   };
 
   return user;

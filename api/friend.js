@@ -1,0 +1,46 @@
+const FriendList = require('../models').friend_list;
+const User = require('../models').user;
+const Sequelize = require('sequelize');
+
+exports.insertFriend = (req,res) => {
+    const {user_id, friend_id} = req.body;
+
+    FriendList.create({user_id : user_id, friend_id : friend_id})
+        .then(() => {
+            console.log("친구 추가 완료");
+            res.send({result : "success", data : {user_id : user_id, friend_id : friend_id} });
+        })
+        .catch(err => console.log("삽입 중 에러 발생", err));
+};
+
+exports.deleteFriend = (req, res) => {
+    console.log("******* delete friend");
+    console.log(JSON.stringify(req.query, null, 2));
+    return FriendList.destroy({where : {user_id : req.query.user_id, friend_id : req.query.friend_id}})
+        .then(result=>{console.log(result); res.send({result : "success", data : {friend_id : req.query.friend_id}})})
+        .catch(err => {
+            res.send({result : "fail", data : err});
+            console.log("삭제 중 에러 발생", err)});
+};
+
+exports.searchAllFriendByOptions = data => {
+    return FriendList.findAll(data)
+        .catch(err => console.log("친구 조회 중 에러 발생", err));
+};
+
+exports.searchAllFriend = (user_id) => {
+    const query = "select b.id, b.name, b.profile from friend_list a, user b where a.friend_id = b.id and a.user_id = :id";
+    return FriendList.sequelize.query(query,{replacements : {id : user_id}, type: Sequelize.QueryTypes.SELECT })
+        .catch(err => console.log("친구 조회 중 에러 발생", err));
+};
+
+exports.searchAllFriendWithInfoAPI = (req, res) => {
+    exports.searchAllFriend(req.query.user_id).then(result=>{
+        res.send(result);
+    });
+}
+
+
+
+
+
