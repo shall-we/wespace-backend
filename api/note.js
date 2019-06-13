@@ -28,6 +28,25 @@ exports.getNoteList = async (req, res, next) => {
       });
 };
 
+exports.getSearchNoteList = async (req, res, next) => {
+    var query = "SELECT * FROM note as a, status as b where a.id=b.id and a.folder_id=:id and b.status <> 'DELETED' and name like :search";
+    var values = {
+      id: req.query.folder_id,
+      search : req.query.search,
+    };
+    Note.sequelize.query(query, {replacements: values})
+    .spread(function (results, metadata) {
+       
+        res.send({
+            result: "success",
+            data: results
+        });
+      }, function (err) {
+  
+  
+      });
+};
+
 exports.register = async (req, res, next) => {
     console.log("create");
 
@@ -47,7 +66,8 @@ exports.register = async (req, res, next) => {
         id: parseInt(id),
         reg_date: Sequelize.fn('NOW'),
         status_date: Sequelize.fn('NOW'),
-        status: "ACTIVED"
+        status: "ACTIVED",
+        lock: 'UNLOCK',
     })
         .then(result => {
             res.send({
@@ -81,6 +101,35 @@ exports.setStatus=async (req, res, next) => {
     }).catch(function(err) {
         console.log("Note데이터 수정 실패");
     });
+}
+
+exports.setLock=async (req, res, next) => {
+    Status.update({lock : req.params.lock},
+    {
+        where: {id: req.params.id}, returning: true})
+        .then(function(result) {
+            console.log("lock test : ",req.params.lock);
+        res.json(result[1][0]);
+    }).catch(function(err) {
+        console.log("lock 수정 실패");
+    });
+}
+
+exports.getLock= async (req, res, next) => {
+    var query = "SELECT a.id, b.lock FROM note as a, status as b where a.id=b.id and a.id=:id";
+    var values = {
+      id: req.query.note_id,
+    };
+    Note.sequelize.query(query, {replacements: values})
+    .spread(function (results, metadata) {
+       
+        res.send({
+            result: "success",
+            data: results
+        });
+      }, function (err) {
+  
+      });
 }
 
 exports.permanentDeleteNote = async (req, res, next) => {

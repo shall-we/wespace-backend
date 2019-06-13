@@ -14,7 +14,7 @@ module.exports = function(sequelize, DataTypes) {
     },
     content: {
       type: DataTypes.STRING(300),
-      allowNull: false
+      allowNull: false,
     },
     folder_id: {
       type: DataTypes.INTEGER(10).UNSIGNED,
