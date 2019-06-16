@@ -82,7 +82,6 @@ io.on('connection',(socket)=>{
     });
   });
 
-
   socket.on('join', (msg) => {
     msg.socketId = socket.client.id;
     //사용자의 친구 목록을 뽑아오고, 해당 사용자를 현재 접속자인 activeUser로 설정
@@ -98,7 +97,9 @@ io.on('connection',(socket)=>{
 
     });
   });
-
+  socket.on('updateCommentList', (msg) => {
+    io.emit('updateCommentList', msg);
+  });
 
   socket.on('updateFolderList',(msg)=>{
 

@@ -16,9 +16,13 @@ module.exports = function(sequelize, DataTypes) {
        allowNull: false
      },
      status: {
-       type: DataTypes.ENUM('PUBLISHED','ACTIVED','LOCKED','DELETED'),
+       type: DataTypes.ENUM('PUBLISHED','ACTIVED','DELETED'),
        allowNull: false
-     }
+     },
+     lock: {
+      type: DataTypes.ENUM('LOCK', 'UNLOCK'),
+      allowNull: false
+      }
    }, {
      tableName: 'status'
    });

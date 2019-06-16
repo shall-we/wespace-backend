@@ -126,8 +126,10 @@ exports.login = async (req, res, next) => {
     return;
   }
 
-  let profile = (result.dataValues.profile.split(',')[0].match(/^data:image\/(png|jpg);base64/))?await upload.getbase64Img(result.dataValues.profile)
+  let profile = (result.dataValues.profile!=="/static/media/default_profile.002ff40d.png")?await upload.getbase64Img(result.dataValues.profile)
       .catch(err=>{console.log('[GETBASE64IMG] '+err)}):result.dataValues.profile;
+
+      if(!profile) profie=result.dataValues.profile;
 
   let Authorization=false;
 
