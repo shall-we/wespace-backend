@@ -105,6 +105,11 @@ io.on('connection',(socket)=>{
     console.log('메세지::',msg);
     io.emit('updateFolderList',msg);
   });
+  socket.on('updateNoticeList',(msg)=>{
+
+    console.log('메세지::',msg);
+    io.emit('updateNoticeList',msg);
+  });
   socket.on('updateNoteList',(msg)=>{
 
     console.log('메세지::',msg);

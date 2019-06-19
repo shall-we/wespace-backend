@@ -27,10 +27,19 @@ exports.getUserList = async (req, res, next) => {
     id: req.query.folder_id
   };
   User.sequelize.query(query, { replacements: values }).spread(
-    function(results, metadata) {
+    async function(results, metadata) {
+
+       const newResult=await Promise.all(results.map(async (data, index)=>{
+           data.profile=await upload.getImage(data.profile);
+           //console.log(data);
+           return data;
+        }));
+
+       console.log('newResult : '+newResult);
+
       res.send({
         result: "success",
-        data: results
+        data: newResult
       });
     },
     function(err) {console.log("user 목록 가지고 오던 중에 오류 발생.. ", err);}
@@ -44,11 +53,17 @@ exports.getUserListExceptMyFriend = async (req, res) => {
     id: req.query.user_id
   };
   User.sequelize.query(query, {replacements: values})
-      .spread(function (results, metadata) {
+      .spread(async function (results, metadata) {0
+
+          const newResult=await Promise.all(results.map(async (data, index)=>{
+              data.profile=await upload.getImage(data.profile);
+              //console.log(data);
+              return data;
+          }));
 
         res.send({
           result: "success",
-          data: results
+          data: newResult,
         });
       }, function (err) {
         console.log("친구 제외한 유저 목록 가져오는 중에 오류 발생.. ", err);
@@ -126,13 +141,12 @@ exports.login = async (req, res, next) => {
     return;
   }
 
-  let profile = (result.dataValues.profile.split(',')[0].match(/^data:image\/(png|jpg);base64/))?await upload.getbase64Img(result.dataValues.profile)
-      .catch(err=>{console.log('[GETBASE64IMG] '+err)}):result.dataValues.profile;
+  let profile =await upload.getImage(result.dataValues.profile);
 
   let Authorization=false;
 
-  if(process.env.ADMINEMAIL===email && process.env.ADMINPASSWORD ===password){
-    console.log('ADMIN');
+    if(process.env.ADMINEMAIL===email && process.env.ADMINPASSWORD ===password){
+      console.log('ADMIN');
       Authorization=true;
   }
 
@@ -169,18 +183,32 @@ exports.login = async (req, res, next) => {
 
 exports.autoLogin = async (req, res, next) => {
 
-  if(req.user){
-    console.log("autoLogin token : ",req.user);
+   if(req.cookies.token) {
+    console.log("autoLogin token : ",req.cookies.token);
 
+    authToken.decodeToken(req.cookies.token)
+    .then((data) =>{
+      res.send({
+        result : "success",
+        data: {
+          autoLogin : true,
+          email : data.email,
+          password: data.password,
+        }
+      })
+      res.status(200).redirect('/note');
+    })
+    .catch((err)=>{
+      console.log("autoLogin error : "+ err);
+    })
+  }
+  else {
     res.send({
-      result : "success",
+      result: "success",
       data: {
-        autoLogin : true,
-        email : req.user.email,
-        password: req.user.password,
-        authorizated : req.user.authorizated,
+        autoLogin : false,
       }
-    });
+    })
   }
 }
 

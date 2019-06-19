@@ -60,10 +60,18 @@ module.exports.getAttachmentList = (req, res, next)=>{
         where :{
             note_id : note_id,
         }
-    }).then((data)=>{
+    }).then(async (results)=>{
+
+        const newResult=await Promise.all(results.map(async (data, index)=>{
+            data.url=await upload.getImage(data.url);
+            //console.log(data);
+            return data;
+        }));
+
+
         res.send({
             result : 'success', 
-            attachmentList : data,
+            attachmentList : newResult,
         })
     }).catch((err)=>{
         console.log('[getAttachmentList] ERROR : '+err);
