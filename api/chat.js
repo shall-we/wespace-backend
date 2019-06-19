@@ -40,7 +40,7 @@ exports.initChatRoom = async (req, res) =>{
         });
     }
 
-}
+};
 
 exports.getChatParticipantInfo = (req, res) => {
 
@@ -144,7 +144,9 @@ exports.getChats = (req, res) => {
 
 exports.getSingleChat = (req, res) => {
        console.log("getSingleChat");
-       let queryStr = 'select * from chatroom_list where chatroom_id in (select chatroom_id from chatroom_list where user_id =:userId) and user_id =:friendId';
+       let queryStr = 'select chatroom_id from (' +
+           ' select dino.chatroom_id from chatroom_list dino where dino.chatroom_id in (select chatroom_id from chatroom_list where user_id =:userId) and user_id =:friendId ) dino2' +
+           ' where (select count(*) from chatroom_list dino3 where dino3.chatroom_id = dino2.chatroom_id) < 3';
        let values = {
               userId: req.query.user_id,
               friendId : req.query.friend_id
@@ -207,11 +209,69 @@ exports.countChatroom = (req, res) => {
        res.send({
            result : "success",
            data : {data : result.dataValues.count}
-       })
+       });
 
    }).catch(err=>{
             console.log("채팅방 개수 세는 중에 에러 발생.. , ", chatroom_id, err);
     });
+
+};
+
+exports.inviteMultiChatroom = (req, res) => {
+
+    (async ()=>{
+        console.log("inviteMultiChatroom 진입");
+        const {participants, master_id, chatroom_id} = req.body;
+        console.log(participants);
+        let roomCount = await ChatRoomList.findOne(
+            {   attributes: ['chatroom_id', [ChatRoomList.sequelize.fn('count', '*'), 'count']],
+                group: 'chatroom_id',
+                where : {chatroom_id : chatroom_id}
+            });
+        console.log("roomCount", roomCount);
+        roomCount = roomCount.dataValues.count;
+        if(roomCount > 2){
+            participants.forEach((friend)=>{
+                 exports.inviteChatRoom(chatroom_id, master_id, friend.value);
+            });
+        }else if(roomCount < 3){
+            let roomName = '';
+            participants.map(el=>{
+                roomName += el.label + " ,";
+                if(roomName.length > 10) {
+                    roomName = roomName.slice(0, 10);
+                    roomName += "...";
+                    return false;
+                }
+            });
+            const newChatroomId = uuidv4();
+            await exports.createChatRoom(newChatroomId);
+            await exports.insertChatRoomInfo(newChatroomId, master_id, roomName);
+            await exports.createChatRoomList(newChatroomId, master_id);
+            participants.forEach( (friend)=> {
+                 exports.inviteChatRoom(newChatroomId, master_id, friend.value);
+            });
+        }else{
+            throw new Error("유효하지 않은 채팅방 입니다.");
+        }
+
+        res.send({
+            result : "success"
+        });
+
+    })();
+
+};
+
+exports.updateChatCheckTime = (req, res) => {
+
+    const {chatroom_id, user_id} = req.body;
+    (async() => {
+        ChatRoomList.update({last_update : new Date()}, {where : {user_id : user_id, chatroom_id : chatroom_id}}).then(result => {
+            console.log("success!", result);
+            res.send({result : "success"});
+        });
+    })();
 
 };
 

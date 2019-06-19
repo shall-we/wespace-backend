@@ -65,12 +65,13 @@ router.get("/friend/getAllFriend", FriendAPI.searchAllFriendWithInfoAPI);
 router.get("/chat/getSingleChat", ChatAPI.getSingleChat);
 router.get("/chat/getChats", ChatAPI.getChats);
 router.post("/chat/initChatroom", ChatAPI.initChatRoom);
+router.post("/chat/inviteMultiChatroom", ChatAPI.inviteMultiChatroom);
 router.patch("/chat/updateChatRoomTitle", ChatAPI.updateChatRoomTitle);
 
 router.get("/chat/getChatParticipantsInfo", ChatAPI.getChatParticipantInfo);
 router.get("/chat/getPrivateChatroomList", ChatAPI.getPrivateChatroomList);
 router.get("/chat/countChatroom", ChatAPI.countChatroom);
-
+router.patch("/chat/updateChatCheckTime", ChatAPI.updateChatCheckTime);
 router.delete("/chat/dropChatroom", ChatAPI.dropChatRoom);
 
 router.get("/admin/user", UserAPI.getAllUserList);

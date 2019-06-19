@@ -3,10 +3,10 @@ const bodyParser = require('body-parser');
 const pino = require('express-pino-logger')();
 const cookieParser = require('cookie-parser');
 const mysql_db = require('./models/index');
-const redis = require("redis");
 const mongoose = require('mongoose');
-const redisClient = redis.createClient();
+
 const redisWork = require("./lib/redisWork");
+const redisClient = redisWork.redisClient;
 const url = require('url');
 const cors = require('cors');
 
@@ -35,34 +35,44 @@ redisClient.on("connect", ()=>{
 
     friend.searchAllFriendByOptions().then(allFriends => {
       allFriends.forEach(el=>{
-        redisWork.setObserver(redisClient, el.dataValues.friend_id, el.dataValues.user_id);
+        redisWork.setObserver(el.dataValues.friend_id, el.dataValues.user_id);
       });
       console.log("observer list 초기화 완료");
-
-
     });
 
   });
 });
 
 const app = express();
-
 const server = require('http').Server(app);
 
 
-app.use(cors({ origin: '*' }));
 //소켓통신
 const socketio=require('socket.io');
+
 const io=socketio.listen(server);
+io.origins('*:*'); // for latest version
 
 io.on('connection',(socket)=>{
   console.log('사용자 접속::' + socket.client.id);
 
+
   socket.on('disconnect', (reason)=>{
+    console.log('사용자 접속 종료 ::',  socket.client.id, reason);
+
     redisWork.disconnect(io, redisClient, socket.client.id)
         .catch(err => {
           console.warn(err);
         });
+  });
+
+  socket.on('exit', (user_id)=>{
+    console.log("접속 종료 명령, ", user_id);
+    redisWork.disconnect(io, redisClient, socket.client.id)
+        .catch(err => {
+          console.warn(err);
+        });
+
   });
 
   socket.on('joinChatroom', chatroom_id => {
@@ -113,6 +123,14 @@ io.on('connection',(socket)=>{
     io.emit('updateNoteList',msg);
 
   });
+
+  socket.on('updateShareBox',(msg)=>{
+
+    console.log('메세지::',msg);
+    io.emit('updateShareBox',msg);
+
+  });
+
 
   socket.on('getFriendList', (msg) => {
 

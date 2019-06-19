@@ -61,8 +61,38 @@ module.exports.getAttachmentList = (req, res, next)=>{
             note_id : note_id,
         }
     }).then((data)=>{
+      //   let chagedData =
+      //   data.map((data, index)=>{
+      //       let {dataValues} = data;
+      //       console.log('data',dataValues);
+      //       if(/(gif|jpg|jpeg|png)$/i.test(dataValues.type)) {
+      //           console.log('url', dataValues.url);
+      //           upload.getbase64Img(dataValues.url).
+      //           then(dataurl=>{
+      //               dataValues
+      //           }).
+      //           catch(err=> console.log(err));
+      //           //console.log('after url : '+ dataValues.url);
+      //       }
+      //
+      //       return dataValues;
+      //
+      //   });
+      //
+      // console.log(chagedData);
+
+        // let changedDate = data.map(async (data, index)=>{
+        //     if(/(\.gif|\.jpg|\.jpeg)$/i.test(data.type)){
+        //         data.url= await upload.getbase64Img(data.url).catch(err=> console.log(err));
+        //         console.log('after url : '+ data.url);
+        //     }
+        //     }
+        // );
+        //console.log(changedDate);
+
+        //
         res.send({
-            result : 'success', 
+            result : 'success',
             attachmentList : data,
         })
     }).catch((err)=>{

@@ -11,6 +11,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "artillery": "^1.6.0-28",
     "base64-img": "^1.0.4",
     "body-parser": "^1.19.0",
     "connect-session-sequelize": "^6.0.0",
@@ -28,9 +29,13 @@
     "jsonwebtoken": "^8.5.1",
     "lodash": "^4.17.11",
     "mime-types": "^2.1.24",
+    "mocha": "^6.1.4",
+    "mongoose": "^5.5.11",
     "mysql2": "^1.6.5",
     "nodemon": "^1.19.0",
     "path": "^0.12.7",
+    "redis": "^2.8.0",
+    "redis-server": "^1.2.2",
     "rich-text": "^3.1.0",
     "sequelize": "^5.8.1",
     "sequelize-session-store": "^0.1.0",
@@ -40,10 +45,6 @@
     "uuid": "^3.3.2",
     "uuid4": "^1.1.4",
     "websocket-json-stream": "0.0.3",
-    "ws": "^7.0.0",
-    "mocha": "^6.1.4",
-    "mongoose": "^5.5.11",
-    "redis": "^2.8.0",
-    "redis-server": "^1.2.2"
+    "ws": "^7.0.0"
   }
 }

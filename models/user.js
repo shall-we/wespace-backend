@@ -35,9 +35,7 @@ module.exports = function(sequelize, DataTypes) {
         user.hasMany(models.chatroom_list, {foreignKey : 'user_id'}),
         user.hasMany(models.chatroom_info, {foreignKey : 'user_id'}),
         user.hasMany(models.friend_list, {foreignKey : 'user_id', onDelete : 'cascade' }),
-        user.hasMany(models.friend_list, {foreignKey : 'friend_id', onDelete : 'cascade' }),
-        user.hasMany(models.group_list, {foreignKey : 'user_id', onDelete : 'cascade' })
-  };
+        user.hasMany(models.friend_list, {foreignKey : 'friend_id', onDelete : 'cascade' })};
 
   return user;
 };

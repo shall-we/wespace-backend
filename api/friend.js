@@ -1,3 +1,4 @@
+const redisWork = require("../lib/redisWork");
 const FriendList = require('../models').friend_list;
 const User = require('../models').user;
 const Sequelize = require('sequelize');
@@ -8,6 +9,7 @@ exports.insertFriend = (req,res) => {
     FriendList.create({user_id : user_id, friend_id : friend_id})
         .then(() => {
             console.log("친구 추가 완료");
+            redisWork.setObserver(friend_id, user_id);
             res.send({result : "success", data : {user_id : user_id, friend_id : friend_id} });
         })
         .catch(err => console.log("삽입 중 에러 발생", err));
@@ -15,9 +17,10 @@ exports.insertFriend = (req,res) => {
 
 exports.deleteFriend = (req, res) => {
     console.log("******* delete friend");
+    const {user_id, friend_id} = req.query;
     console.log(JSON.stringify(req.query, null, 2));
-    return FriendList.destroy({where : {user_id : req.query.user_id, friend_id : req.query.friend_id}})
-        .then(result=>{console.log(result); res.send({result : "success", data : {friend_id : req.query.friend_id}})})
+    return FriendList.destroy({where : {user_id : user_id, friend_id : friend_id}})
+        .then(result=>{console.log(result); redisWork.delObserver(friend_id, user_id); res.send({result : "success", data : {friend_id : friend_id}})})
         .catch(err => {
             res.send({result : "fail", data : err});
             console.log("삭제 중 에러 발생", err)});
