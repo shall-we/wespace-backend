@@ -31,14 +31,20 @@ router.patch("/folder/:id/:name", FolderAPI.updateFolderName);
 
 // Note
 router.get("/note/list", NoteAPI.getNoteList);
+router.get("/note/searchlist",NoteAPI.getSearchNoteList);
+router.get("/note/deletedlist",NoteAPI.getDeletedNoteList);
 router.post("/note", NoteAPI.register);
 router.patch("/note/:id/:name", NoteAPI.updateNoteName);
 router.patch("/note/status/:id/:status", NoteAPI.setStatus);
+router.patch("/note/lock/:id/:lock", NoteAPI.setLock);
+router.get("/note/status/", NoteAPI.noteStateCheck);
 
 // Notice
 router.post("/notice", NoticeAPI.create);
 router.get("/notice", NoticeAPI.getNoticeList);
+router.patch("/notice/:idx", NoticeAPI.deleteNoticeList);
 router.patch("/notice/:to/:object/:type", NoticeAPI.updateNoticeList);
+
 
 // Attachment
 router.post("/attachment/create/:note_id", AttachmentAPI.create);

@@ -115,13 +115,30 @@ io.on('connection',(socket)=>{
 
     console.log('메세지::',msg);
     io.emit('updateFolderList',msg);
+  });
+  socket.on('updateNoticeList',(msg)=>{
 
+    console.log('메세지::',msg);
+    io.emit('updateNoticeList',msg);
   });
   socket.on('updateNoteList',(msg)=>{
 
     console.log('메세지::',msg);
     io.emit('updateNoteList',msg);
+  });
+  socket.on('updateNoteLock',(msg)=>{
 
+    console.log('메세지::',msg);
+    io.emit('updateNoteLock',msg);
+  });
+  socket.on('updateCommentList', msg=>{
+    console.log(msg);
+  io.emit('updateCommentList',msg);
+  });
+  socket.on('updateShareBox', msg=>{
+    console.log('updateShareBox');
+    console.log(msg);
+  io.emit('updateShareBox',msg);
   });
 
   socket.on('updateShareBox',(msg)=>{

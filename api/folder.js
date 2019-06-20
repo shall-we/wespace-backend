@@ -62,7 +62,7 @@ exports.getPrivateList = async (req, res, next) => {
     .spread(function (results, metadata) {
         res.send({
             result: "success",
-            data: results
+            data: results,
         });
       }, function (err) {
   
@@ -110,7 +110,7 @@ exports.getSharedList = async (req, res, next) => {
        
         res.send({
             result: "success",
-            data: results
+            data: results,
         });
       }, function (err) {
   

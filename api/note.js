@@ -36,14 +36,32 @@ exports.getSearchNoteList = async (req, res, next) => {
     };
     Note.sequelize.query(query, {replacements: values})
     .spread(function (results, metadata) {
-       
+
         res.send({
             result: "success",
             data: results
         });
       }, function (err) {
-  
-  
+
+
+      });
+};
+
+exports.getDeletedNoteList = async (req, res, next) => {
+    var query = 'SELECT * FROM note as a, status as b where a.id=b.id and a.folder_id=:id and b.status = "DELETED"';
+    var values = {
+      id: req.query.folder_id
+    };
+    Note.sequelize.query(query, {replacements: values})
+    .spread(function (results, metadata) {
+
+        res.send({
+            result: "success",
+            data: results
+        });
+      }, function (err) {
+
+
       });
 };
 
@@ -115,20 +133,20 @@ exports.setLock=async (req, res, next) => {
     });
 }
 
-exports.getLock= async (req, res, next) => {
-    var query = "SELECT a.id, b.lock FROM note as a, status as b where a.id=b.id and a.id=:id";
+exports.noteStateCheck= async (req, res, next) => {
+    var query = "SELECT a.id, b.lock, b.status FROM note as a, status as b where a.id=b.id and a.content=:uuid";
     var values = {
-      id: req.query.note_id,
+      uuid: req.query.uuid,
     };
     Note.sequelize.query(query, {replacements: values})
     .spread(function (results, metadata) {
-       
+
         res.send({
             result: "success",
             data: results
         });
       }, function (err) {
-  
+
       });
 }
 

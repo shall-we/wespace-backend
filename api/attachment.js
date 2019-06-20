@@ -60,40 +60,18 @@ module.exports.getAttachmentList = (req, res, next)=>{
         where :{
             note_id : note_id,
         }
-    }).then((data)=>{
-      //   let chagedData =
-      //   data.map((data, index)=>{
-      //       let {dataValues} = data;
-      //       console.log('data',dataValues);
-      //       if(/(gif|jpg|jpeg|png)$/i.test(dataValues.type)) {
-      //           console.log('url', dataValues.url);
-      //           upload.getbase64Img(dataValues.url).
-      //           then(dataurl=>{
-      //               dataValues
-      //           }).
-      //           catch(err=> console.log(err));
-      //           //console.log('after url : '+ dataValues.url);
-      //       }
-      //
-      //       return dataValues;
-      //
-      //   });
-      //
-      // console.log(chagedData);
+    }).then(async (results)=>{
 
-        // let changedDate = data.map(async (data, index)=>{
-        //     if(/(\.gif|\.jpg|\.jpeg)$/i.test(data.type)){
-        //         data.url= await upload.getbase64Img(data.url).catch(err=> console.log(err));
-        //         console.log('after url : '+ data.url);
-        //     }
-        //     }
-        // );
-        //console.log(changedDate);
+        const newResult=await Promise.all(results.map(async (data, index)=>{
+            data.url=await upload.getImage(data.url);
+            //console.log(data);
+            return data;
+        }));
 
-        //
+
         res.send({
-            result : 'success',
-            attachmentList : data,
+            result : 'success', 
+            attachmentList : newResult,
         })
     }).catch((err)=>{
         console.log('[getAttachmentList] ERROR : '+err);
