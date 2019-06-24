@@ -2,6 +2,7 @@ const redisWork = require("../lib/redisWork");
 const FriendList = require('../models').friend_list;
 const User = require('../models').user;
 const Sequelize = require('sequelize');
+let upload = require('../lib/upload');
 
 exports.insertFriend = (req,res) => {
     const {user_id, friend_id} = req.body;
@@ -38,8 +39,16 @@ exports.searchAllFriend = (user_id) => {
 };
 
 exports.searchAllFriendWithInfoAPI = (req, res) => {
-    exports.searchAllFriend(req.query.user_id).then(result=>{
-        res.send(result);
+    exports.searchAllFriend(req.query.user_id).then(async results=>{
+
+        const newResult=await Promise.all(results.map(async (data, index)=>{
+            console.log("is it data?");
+            console.log(data);
+            data.profile=await upload.getImage(data.profile);
+            //console.log(data);
+            return data;
+        }));
+        res.send(newResult);
     });
 }
 

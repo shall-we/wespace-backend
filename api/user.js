@@ -5,6 +5,7 @@ let Note = require("../models").note;
 let authToken = require("../lib/token");
 let upload = require('../lib/upload');
 const Sequelize = require("sequelize");
+const Op = Sequelize.Op;
 require('dotenv').config();
 
 exports.searchOne = data => {
@@ -81,32 +82,40 @@ exports.register = async (req, res, next) => {
 
   let userData = await upload.uploadAsFile(req , 'user');
 
+  console.log('userData', userData);
+
   let result = await exports.searchOne({
     where: {
-      name: userData.name,
-      email: userData.email,
+      [Op.or]:[{
+        name: userData.name,
+      },{
+        email: userData.email,
+      }]
     }
   });
 
+  // console.log('result', result);
+
   // auth_already_exists check
   if (result) {
+    console.log('auth_already_exists check');
     res.send({
       result: "fail",
       failType: "auth_already_exists"
     });
-    return;
-  }
+  }else {
 
-  //insert query
-  User.create(userData)
-    .then(result => {
-      res.send({
-        result: "success"
-      });
-    })
-    .catch(err => {
-      console.log("[JOIN] create err : " + err);
-    });
+    //insert query
+    User.create(userData)
+        .then(result => {
+          res.send({
+            result: "success"
+          });
+        })
+        .catch(err => {
+          console.log("[JOIN] create err : " + err);
+        });
+  }
 };
 
 // 로그인

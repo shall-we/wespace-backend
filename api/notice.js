@@ -57,7 +57,7 @@ exports.getNoticeList = async (req, res, next) => {
     else  if(req.query.type==='NOTE')
         query='select a.idx as "notice_id" ,d.content, d.name as "object",c.name as "from", a.message, date_format(a.reg_date,"%y-%m-%d %H:%m") as reg_date  from NOTICE a ,USER c,NOTE d where a.from=c.id and a.object=d.id and a.check="FALSE" and  a.to=:id and a.type=:type order by a.reg_date';
     else  if(req.query.type==='CHAT')
-        query='select c.profile as "profile", d.content, d.name as "object",c.name as "from", a.message, date_format(a.reg_date,"%y-%m-%d %H:%m") as reg_date  from NOTICE a ,USER c,NOTE d where a.from=c.id and a.object=d.id and a.check="FALSE" and  a.to=:id and a.type=:type order by a.reg_date desc';
+        query='select a.idx as "notice_id", d.id as "note_id", c.profile as "profile", d.content, b.lock, d.name as "object",c.name as "from", a.message, date_format(a.reg_date,"%y-%m-%d %H:%m") as reg_date  from NOTICE a ,STATUS b, USER c,NOTE d where a.from=c.id and a.object=d.id and b.id=d.id and a.check="FALSE" and  a.to=:id and a.type=:type order by a.reg_date desc';
 
     var values = {
         id: parseInt(req.query.id),
@@ -115,5 +115,4 @@ exports.deleteNoticeList = async (req, res, next) => {
         .then(function(result) {res.json(result[1][0]);})
         .catch(function(err) {console.log("데이터 수정 실패");});
 };
-
 

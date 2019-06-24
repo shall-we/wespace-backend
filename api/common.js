@@ -31,7 +31,7 @@ exports.checkAdmin=async(req,res,next)=>{
     console.log(req.user);
     const adminPassword = 'admin1234';
 
-    if(!req.user) {
+    if(!req.user || req.url==='/admin/announcement') {
         next();
         return;
     }

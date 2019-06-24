@@ -12,6 +12,7 @@ const cors = require('cors');
 
 const friend = require("./api/friend");
 const chatApi = require("./api/chat");
+let upload = require('./lib/upload');
 
 const MONGO_URL = 'mongodb://wespace:wespace@15.164.154.155:27983/wespace';
 
@@ -156,11 +157,14 @@ io.on('connection',(socket)=>{
     friend.searchAllFriend(msg.id).then((result)=>{
 
       let friendList = result.map(async (el)=>{
-        let data = {};
+        let data = Object.assign({}, el);
         console.log("friend", el);
 
+        data.profile=await upload.getImage(el.profile);
+        console.log(data.profile);
+
         data.joined = !!(await redisWork.getActiveUser(redisClient, el.id));
-        return Object.assign(data, el);
+        return data;
       });
 
       Promise.all(friendList).then((result)=>{
