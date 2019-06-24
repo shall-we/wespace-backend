@@ -7,6 +7,8 @@ const ChatRoomList = require("../models").chatroom_list;
 const ChatRoomInfo = require("../models").chatroom_info;
 const Chat = require("../models/mongo/chat");
 const userApi = require("../api/user");
+const redisWork = require("../lib/redisWork");
+const socketConnect = require("../connect/socketConnect");
 
 exports.initChatRoom = async (req, res) =>{
 
@@ -26,9 +28,18 @@ exports.initChatRoom = async (req, res) =>{
 
         await exports.createChatRoomList(chatroomId, user_id);
         await exports.createChatRoomList(chatroomId, friend_id);
+
+        let sockets = await redisWork.getUsersSocket(friend_id);
+        sockets = socketConnect.split(sockets);
+        if(sockets && sockets instanceof Array){
+            sockets.forEach(socket => {
+                console.log("sending socket.. ", socket)
+                socketConnect.io.sockets.connected[socket].emit('fetchChatList', {});
+            });
+        }
         res.send({
             result: "success",
-            data : {chatroom_id : chatroomId}
+            data : {chatroom_id : chatroomId, friends_socket : sockets}
         });
     }catch(err){
         console.warn("ERROR! 채팅방 초기화 중 에러 발생 ! user id = " + req.user_id, err);
@@ -72,7 +83,6 @@ exports.createChatRoomList = (chatroomId, userId) => {
            .catch((err)=>{ console.log("ERROR! ", err); });
 };
 
-
 exports.insertChatRoomInfo = (chatroomId, user_id, title) => {
        return ChatRoomInfo.create({chatroom_id : chatroomId, user_id : user_id, chatroom_title : title})
            .catch((err)=>{ console.log("ERROR! ", err); });
@@ -103,9 +113,17 @@ exports.updateChatRoomTitle = (req, res) => {
            .catch((err)=>{  console.log("ERROR! ", err); });
 };
 
-exports.inviteChatRoom = (chatroomId, userId, friendId) => {
+exports.inviteChatRoom = async (chatroomId, userId, friendId) => {
        console.log(userId + " 님이 " + friendId + " 님을 초대하셨습니다.");
-       return exports.createChatRoomList(chatroomId, friendId);
+        let sockets = await redisWork.getUsersSocket(friendId);
+        sockets = socketConnect.split(sockets);
+        if(sockets && sockets instanceof Array){
+            sockets.forEach(socket => {
+                socketConnect.io.sockets.connected[socket].emit('fetchChatList', {});
+            });
+        }
+        console.log("가져온 소켓 정보... ", sockets);
+        return exports.createChatRoomList(chatroomId, friendId);
 };
 
 exports.dropChatRoom = (req, res) => {
@@ -250,7 +268,32 @@ exports.inviteMultiChatroom = (req, res) => {
             await exports.createChatRoomList(newChatroomId, master_id);
             participants.forEach( (friend)=> {
                  exports.inviteChatRoom(newChatroomId, master_id, friend.value);
+                (async()=>{
+                    let sockets = await redisWork.getUsersSocket(friend.value);
+                    sockets = socketConnect.split(sockets);
+                    if(sockets && sockets instanceof Array){
+                        sockets.forEach(socket => {
+                            console.log("sending socket.. ", socket)
+                            socketConnect.io.sockets.connected[socket].emit('fetchChatList', {});
+                        });
+                    }
+
+                })();
             });
+
+            (async()=>{
+                let sockets = await redisWork.getUsersSocket(master_id);
+                sockets = socketConnect.split(sockets);
+                if(sockets && sockets instanceof Array){
+                    sockets.forEach(socket => {
+                        console.log("sending socket.. ", socket)
+                        socketConnect.io.sockets.connected[socket].emit('fetchChatList', {});
+                    });
+                }
+
+            })();
+
+
         }else{
             throw new Error("유효하지 않은 채팅방 입니다.");
         }

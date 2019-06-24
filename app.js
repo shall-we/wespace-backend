@@ -3,30 +3,22 @@ const bodyParser = require('body-parser');
 const pino = require('express-pino-logger')();
 const cookieParser = require('cookie-parser');
 const mysql_db = require('./models/index');
-const mongoose = require('mongoose');
+
 
 const redisWork = require("./lib/redisWork");
 const redisClient = redisWork.redisClient;
 const url = require('url');
 const cors = require('cors');
 
+
+const mongoConnect = require("./connect/mongoConnect");
+const socketConnect = require("./connect/socketConnect");
+
 const friend = require("./api/friend");
 const chatApi = require("./api/chat");
 let upload = require('./lib/upload');
 
-const MONGO_URL = 'mongodb://wespace:wespace@15.164.154.155:27983/wespace';
-
-mongoose.connect(MONGO_URL, {
-  useNewUrlParser:true,
-  autoReconnect : true
-}, 60000)
-    .then(msg => {
-      console.log("mongodb 접속 성공!");
-    })
-    .catch(err => {
-      console.log("mongodb 접속 실패..");
-      console.log(err);
-    });
+mongoConnect.initMongo();
 
 redisClient.on("error", (err) => console.log('redis 구동중 문제 발생.. ', err));
 redisClient.on("connect", ()=>{
@@ -46,14 +38,10 @@ redisClient.on("connect", ()=>{
 
 const app = express();
 const server = require('http').Server(app);
+socketConnect.initSocket(server);
 
 
-//소켓통신
-const socketio=require('socket.io');
-
-const io=socketio.listen(server);
-io.origins('*:*'); // for latest version
-
+const io = socketConnect.io;
 io.on('connection',(socket)=>{
   console.log('사용자 접속::' + socket.client.id);
 
